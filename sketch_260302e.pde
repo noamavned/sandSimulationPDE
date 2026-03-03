@@ -21,7 +21,7 @@ void setup() {
     for (int i = 0; i < cols; i++) {
       float distToCenter = abs(i - cols/2.0);
       float distToNeck = abs(j - neckY);
-      if (distToCenter > distToNeck + opening && distToNeck < 15) {
+      if (distToCenter > distToNeck + opening && distToNeck < rows / 2) {
         Wall b = new Wall(i, j);
         grid[i][j] = b;
         walls.add(b);
@@ -76,3 +76,4 @@ void flipGrid() {
 void keyPressed() {
   if (key == ' ' || key == 'f') flipGrid();
 }
+

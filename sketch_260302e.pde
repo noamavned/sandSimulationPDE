@@ -3,10 +3,9 @@ int dragFp = 1;
 int c = 800;
 int cols, rows;
 int w = 5;
-boolean spread = false;
 Sand[][] grid;
-ArrayList<Sand> activeGrains = new ArrayList<Sand>();
-ArrayList<Sand> staticGrains = new ArrayList<Sand>();
+ArrayList<Sand> allGrains = new ArrayList<Sand>();
+ArrayList<Wall> walls = new ArrayList<Wall>();
 
 void setup() {
   size(100, 400);
@@ -14,29 +13,32 @@ void setup() {
   cols = width / w;
   rows = height / w;
   grid = new Sand[cols][rows];
-  background(0);
+  
+  int neckY = rows / 2;
+  int opening = 1;
+
+  for (int j = 0; j < rows; j++) {
+    for (int i = 0; i < cols; i++) {
+      float distToCenter = abs(i - cols/2.0);
+      float distToNeck = abs(j - neckY);
+      if (distToCenter > distToNeck + opening && distToNeck < 15) {
+        Wall b = new Wall(i, j);
+        grid[i][j] = b;
+        walls.add(b);
+      }
+    }
+  }
 }
 
 void draw() {
-  if (mousePressed) {
-    spawn();
-  }
+  if (mousePressed) spawn();
   background(0);
-  for (int i = activeGrains.size() - 1; i >= 0; i--) {
-    Sand s = activeGrains.get(i);
-    if (frameCount % fp == 0) {
-      s.update(spread);
-    }
-    if (s.stuck) {
-      staticGrains.add(s);
-      activeGrains.remove(i);
-    }
-  }
+  
+  for (Wall b : walls) b.render(b.x, b.y);
 
-  for (Sand s : staticGrains) {
-    s.render(s.x, s.y);
-  }
-  for (Sand s : activeGrains) {
+  for (int i = allGrains.size() - 1; i >= 0; i--) {
+    Sand s = allGrains.get(i);
+    s.update();
     s.render(s.x, s.y);
   }
 }
@@ -45,39 +47,32 @@ void spawn() {
   if (frameCount % dragFp == 0) {
     int x = mouseX / w;
     int y = mouseY / w;
-  
     if (x >= 0 && x < cols && y >= 0 && y < rows && grid[x][y] == null) {
-      int n = frameCount%c;
-      float hueValue = map(n, 0, c-1, 0, 360);
+      float hueValue = map(frameCount % c, 0, c - 1, 0, 360);
       Sand newSand = new Sand(x, y, color(hueValue, 80, 90));
       grid[x][y] = newSand;
-      activeGrains.add(newSand);
+      allGrains.add(newSand);
     }
   }
 }
 
 void flipGrid() {
-  activeGrains.addAll(staticGrains);
-  staticGrains.clear();
-
   grid = new Sand[cols][rows];
 
-  for (int i = activeGrains.size() - 1; i >= 0; i--) {
-    Sand s = activeGrains.get(i);
-    
+  for (Wall b : walls) {
+    b.y = (rows - 1) - b.y;
+    grid[b.x][b.y] = b;
+  }
+
+  for (Sand s : allGrains) {
     s.y = (rows - 1) - s.y;
     s.stuck = false;
-
     if (s.x >= 0 && s.x < cols && s.y >= 0 && s.y < rows) {
       grid[s.x][s.y] = s;
-    } else {
-      activeGrains.remove(i);
     }
   }
 }
 
 void keyPressed() {
-  if (key == ' ' || key == 'f') {
-    flipGrid();
-  }
+  if (key == ' ' || key == 'f') flipGrid();
 }

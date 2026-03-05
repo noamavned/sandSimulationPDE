@@ -4,7 +4,7 @@ class Wall extends Sand {
     this.stuck = true;
   }
 
-  void update(boolean spread) {
+  void update() {
     this.stuck = true;
   }
 
